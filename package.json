@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@nhost/nhost-js": "^4.8.0",
     "clsx": "^2.1.1",
+    "lucide-react": "^1.40.0",
     "next": "16.3.2",
     "react": "19.2.8",
     "react-dom": "19.2.8",
