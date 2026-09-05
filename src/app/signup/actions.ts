@@ -25,7 +25,7 @@ export async function signUp(
     });
 
     if (response.body?.session) {
-      return { redirect: '/profile' };
+      return { redirect: '/orgs' };
     }
     return { awaitingVerification: true };
   } catch (err) {

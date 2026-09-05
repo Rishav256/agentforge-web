@@ -37,7 +37,7 @@ export default function Verify() {
 
     exchangeCode(code, codeVerifier).then((result) => {
       if (result.success) {
-        router.push('/profile');
+        router.push('/orgs');
       } else {
         setStatus('error');
         setError(result.error ?? 'Verification failed');

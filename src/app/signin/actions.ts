@@ -17,7 +17,7 @@ export async function signIn(formData: FormData) {
     const response = await nhost.auth.signInEmailPassword({ email, password });
 
     if (response.body?.session) {
-      return { redirect: '/profile' };
+      return { redirect: '/orgs' };
     }
     return { error: 'Failed to sign in. Please check your credentials.' };
   } catch (err) {
