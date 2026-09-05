@@ -1,5 +1,6 @@
 import { createNhostClient } from '@/lib/nhost/server';
 import { Panel } from '@/components/ui/Panel';
+import { signOut } from './actions';
 
 export default async function Profile() {
   const nhost = await createNhostClient();
@@ -12,7 +13,7 @@ export default async function Profile() {
           Profile
         </h1>
 
-        <div className="flex flex-col gap-3 font-mono text-sm">
+        <div className="mb-6 flex flex-col gap-3 font-mono text-sm">
           <div>
             <span className="text-text-muted">EMAIL: </span>
             <span className="text-text-primary">
@@ -32,6 +33,15 @@ export default async function Profile() {
             </span>
           </div>
         </div>
+
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="rounded-md border border-border px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:border-red/50 hover:text-red"
+          >
+            Sign out
+          </button>
+        </form>
       </Panel>
     </div>
   );
