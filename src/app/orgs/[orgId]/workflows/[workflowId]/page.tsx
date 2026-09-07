@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createNhostClient } from '@/lib/nhost/server';
 import { getWorkflowDetail } from '@/lib/graphql/workflow-detail';
@@ -8,7 +9,7 @@ export default async function WorkflowBuilderPage({
 }: {
   params: Promise<{ orgId: string; workflowId: string }>;
 }) {
-  const { workflowId } = await params;
+  const { orgId, workflowId } = await params;
   const nhost = await createNhostClient();
   const workflow = await getWorkflowDetail(nhost, workflowId);
 
@@ -18,10 +19,16 @@ export default async function WorkflowBuilderPage({
 
   return (
     <div className="flex h-[calc(100vh-49px)] w-full flex-col">
-      <div className="border-b border-border px-6 py-3">
+      <div className="flex items-center justify-between border-b border-border px-6 py-3">
         <h1 className="text-sm font-semibold text-text-primary">
           {workflow.name}
         </h1>
+        <Link
+          href={`/orgs/${orgId}/workflows/${workflowId}/runs`}
+          className="font-mono text-xs text-text-secondary hover:text-teal"
+        >
+          View runs →
+        </Link>
       </div>
       <div className="flex-1">
         <WorkflowCanvas steps={workflow.steps} />

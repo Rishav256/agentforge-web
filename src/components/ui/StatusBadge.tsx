@@ -9,7 +9,7 @@ type StepRunStatus =
   | 'paused'
   | 'skipped';
 
-type Status = RunStatus | StepRunStatus;
+export type Status = RunStatus | StepRunStatus;
 
 const STATUS_CONFIG: Record<
   Status,
