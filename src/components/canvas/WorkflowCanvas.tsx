@@ -37,16 +37,51 @@ export function WorkflowCanvas({ steps }: WorkflowCanvasProps) {
     [steps],
   );
 
-  const initialEdges = useMemo<Edge[]>(
-    () =>
-      steps.slice(1).map((step, index) => ({
-        id: `${steps[index].id}-${step.id}`,
-        source: steps[index].id,
+  const initialEdges = useMemo<Edge[]>(() => {
+    const stepOrderToId = new Map(steps.map((s) => [s.stepOrder, s.id]));
+
+    const sequentialEdges: Edge[] = steps.slice(1).map((step, index) => {
+      const prevStep = steps[index];
+      const isBranchSource = prevStep.type === 'conditional_branch';
+
+      return {
+        id: `${prevStep.id}-${step.id}`,
+        source: prevStep.id,
         target: step.id,
         style: { stroke: 'var(--color-border)' },
-      })),
-    [steps],
-  );
+        label: isBranchSource ? 'true' : undefined,
+        labelStyle: { fill: 'var(--color-text-muted)', fontSize: 10 },
+        labelBgStyle: { fill: 'var(--color-surface)' },
+      };
+    });
+
+    const branchEdges: Edge[] = steps
+      .filter((s) => s.type === 'conditional_branch')
+      .flatMap((s) => {
+        const jumpTarget = s.config.jumpToStepOnFalse;
+        if (typeof jumpTarget !== 'number') return [];
+
+        const targetId = stepOrderToId.get(jumpTarget);
+        if (!targetId) return [];
+
+        return [
+          {
+            id: `${s.id}-branch-${targetId}`,
+            source: s.id,
+            target: targetId,
+            style: {
+              stroke: 'var(--color-text-muted)',
+              strokeDasharray: '4 4',
+            },
+            label: 'false',
+            labelStyle: { fill: 'var(--color-text-muted)', fontSize: 10 },
+            labelBgStyle: { fill: 'var(--color-surface)' },
+          },
+        ];
+      });
+
+    return [...sequentialEdges, ...branchEdges];
+  }, [steps]);
 
   const [nodes, , onNodesChange] = useNodesState<StepNodeType>(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState<Edge>(initialEdges);
