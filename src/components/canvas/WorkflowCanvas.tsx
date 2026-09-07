@@ -1,10 +1,19 @@
 'use client';
 
-import { useMemo } from 'react';
-import { ReactFlow, Background, Controls, type Edge } from '@xyflow/react';
+import { useCallback, useMemo } from 'react';
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  useNodesState,
+  useEdgesState,
+  type Edge,
+  type OnNodeDrag,
+} from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { StepNode, type StepNodeType } from './StepNode';
 import type { WorkflowStep } from '@/lib/graphql/workflow-detail';
+import { updateStepPosition } from '@/app/orgs/[orgId]/workflows/[workflowId]/actions';
 
 const nodeTypes = { step: StepNode };
 
@@ -13,7 +22,7 @@ interface WorkflowCanvasProps {
 }
 
 export function WorkflowCanvas({ steps }: WorkflowCanvasProps) {
-  const nodes = useMemo<StepNodeType[]>(
+  const initialNodes = useMemo<StepNodeType[]>(
     () =>
       steps.map((step, index) => ({
         id: step.id,
@@ -28,7 +37,7 @@ export function WorkflowCanvas({ steps }: WorkflowCanvasProps) {
     [steps],
   );
 
-  const edges = useMemo<Edge[]>(
+  const initialEdges = useMemo<Edge[]>(
     () =>
       steps.slice(1).map((step, index) => ({
         id: `${steps[index].id}-${step.id}`,
@@ -39,12 +48,29 @@ export function WorkflowCanvas({ steps }: WorkflowCanvasProps) {
     [steps],
   );
 
+  const [nodes, , onNodesChange] = useNodesState<StepNodeType>(initialNodes);
+  const [edges, , onEdgesChange] = useEdgesState<Edge>(initialEdges);
+
+  const handleNodeDragStop = useCallback<OnNodeDrag<StepNodeType>>(
+    (_event, node) => {
+      updateStepPosition(node.id, node.position).then((result) => {
+        if (!result.success) {
+          console.error('Failed to persist node position:', result.error);
+        }
+      });
+    },
+    [],
+  );
+
   return (
     <div className="h-full w-full bg-bg">
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeDragStop={handleNodeDragStop}
         fitView
         proOptions={{ hideAttribution: true }}
       >
