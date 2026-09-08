@@ -2,6 +2,7 @@
 
 import type { NhostClient } from '@nhost/nhost-js';
 import { createNhostClient } from '@/lib/nhost/server';
+import { triggerWorkflowRun as triggerWorkflowRunQuery } from '@/lib/graphql/actions';
 
 const UPDATE_STEP_POSITION = `
   mutation UpdateStepPosition($stepId: uuid!, $position: jsonb!) {
@@ -36,4 +37,10 @@ export async function updateStepPosition(
     console.error('[updateStepPosition] Raw error:', err);
     return { success: false, error: 'Failed to save position' };
   }
+}
+
+export async function triggerRun(workflowId: string) {
+  console.log('[triggerRun] workflowId received:', workflowId);
+  const nhost = await createNhostClient();
+  return triggerWorkflowRunQuery(nhost, workflowId);
 }

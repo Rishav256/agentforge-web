@@ -4,6 +4,7 @@ import { Panel } from '@/components/ui/Panel';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { createNhostClient } from '@/lib/nhost/server';
 import { getRunDetail, isValidStatus } from '@/lib/graphql/runs';
+import { ApproveStepButton } from '@/components/canvas/ApproveStepButton';
 
 export default async function RunDetailPage({
   params,
@@ -55,6 +56,9 @@ export default async function RunDetailPage({
                 <span className="max-w-xs truncate text-xs text-red">
                   {sr.error}
                 </span>
+              )}
+              {sr.status === 'paused' && (
+                <ApproveStepButton stepRunId={sr.id} />
               )}
               {isValidStatus(sr.status) ? (
                 <StatusBadge status={sr.status} />
