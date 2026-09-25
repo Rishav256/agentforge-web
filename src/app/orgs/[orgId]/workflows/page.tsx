@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Panel } from '@/components/ui/Panel';
 import { createNhostClient } from '@/lib/nhost/server';
 import { getOrgWorkflows } from '@/lib/graphql/workflows';
+import { CreateWorkflowButton } from '@/components/workflows/CreateWorkflowButton';
 
 export default async function WorkflowsPage({
   params,
@@ -14,9 +15,10 @@ export default async function WorkflowsPage({
 
   return (
     <div className="flex flex-1 flex-col p-6">
-      <h1 className="mb-4 text-lg font-semibold text-text-primary">
-        Workflows
-      </h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-text-primary">Workflows</h1>
+        <CreateWorkflowButton orgId={orgId} />
+      </div>
 
       {workflows.length === 0 ? (
         <Panel className="p-6 text-center">

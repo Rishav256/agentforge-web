@@ -56,3 +56,49 @@ export async function getOrgWorkflows(
     stepCount: w.workflow_steps.length,
   }));
 }
+
+const CREATE_WORKFLOW = `
+  mutation CreateWorkflow($orgId: uuid!, $name: String!) {
+    insert_workflows_one(object: { org_id: $orgId, name: $name }) {
+      id
+    }
+  }
+`;
+
+interface CreateWorkflowResponse {
+  insert_workflows_one: { id: string } | null;
+}
+
+export async function createWorkflow(
+  nhost: NhostClient,
+  orgId: string,
+  name: string,
+): Promise<
+  { success: true; workflowId: string } | { success: false; error: string }
+> {
+  try {
+    const response = await nhost.graphql.request<CreateWorkflowResponse>({
+      query: CREATE_WORKFLOW,
+      variables: { orgId, name },
+    });
+
+    if (response.body.errors) {
+      return {
+        success: false,
+        error: response.body.errors[0]?.message ?? 'Failed to create workflow',
+      };
+    }
+
+    if (!response.body.data?.insert_workflows_one) {
+      return { success: false, error: 'No workflow returned after creation' };
+    }
+
+    return {
+      success: true,
+      workflowId: response.body.data.insert_workflows_one.id,
+    };
+  } catch (err) {
+    console.error('[createWorkflow] Raw error:', err);
+    return { success: false, error: 'Failed to create workflow' };
+  }
+}
