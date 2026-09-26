@@ -1,74 +1,56 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { Panel } from '@/components/ui/Panel';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { ApproveStepButton } from '@/components/canvas/ApproveStepButton';
 import { createNhostClient } from '@/lib/nhost/server';
-import { getRunDetail, isValidStatus } from '@/lib/graphql/runs';
+import { getWorkflowRuns, isValidStatus } from '@/lib/graphql/runs';
 
-export default async function RunDetailPage({
+export default async function RunsListPage({
   params,
 }: {
-  params: Promise<{ orgId: string; workflowId: string; runId: string }>;
+  params: Promise<{ orgId: string; workflowId: string }>;
 }) {
-  const { orgId, workflowId, runId } = await params;
+  const { orgId, workflowId } = await params;
   const nhost = await createNhostClient();
-  const run = await getRunDetail(nhost, runId);
-
-  if (!run) {
-    notFound();
-  }
+  const runs = await getWorkflowRuns(nhost, workflowId);
 
   return (
     <div className="flex flex-1 flex-col p-6">
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="font-mono text-sm text-text-secondary">
-            RUN {run.id.slice(0, 8)}
-          </h1>
-          {isValidStatus(run.status) ? (
-            <StatusBadge status={run.status} />
-          ) : (
-            <span className="font-mono text-xs text-red">{run.status}</span>
-          )}
-        </div>
+        <h1 className="font-mono text-sm text-text-secondary">RUNS</h1>
         <Link
-          href={`/orgs/${orgId}/workflows/${workflowId}/runs`}
+          href={`/orgs/${orgId}/workflows/${workflowId}`}
           className="font-mono text-xs text-text-secondary hover:text-teal"
         >
-          ← Back to runs
+          ← Back to workflow
         </Link>
       </div>
 
-      <div className="flex flex-col gap-2">
-        {run.stepRuns.map((sr) => (
-          <Panel key={sr.id} className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-xs text-text-muted">
-                {String(sr.stepOrder).padStart(2, '0')}
-              </span>
-              <span className="font-mono text-xs text-text-primary">
-                {sr.stepType.toUpperCase()}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              {sr.error && (
-                <span className="max-w-xs truncate text-xs text-red">
-                  {sr.error}
+      {runs.length === 0 ? (
+        <p className="font-mono text-xs text-text-muted">No runs yet.</p>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {runs.map((run) => (
+            <Link
+              key={run.id}
+              href={`/orgs/${orgId}/workflows/${workflowId}/runs/${run.id}`}
+              className="flex items-center justify-between rounded-md border border-border bg-surface-elevated p-4 hover:border-teal"
+            >
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-xs text-text-muted">
+                  {run.id.slice(0, 8)}
                 </span>
-              )}
-              {sr.status === 'paused' && (
-                <ApproveStepButton stepRunId={sr.id} />
-              )}
-              {isValidStatus(sr.status) ? (
-                <StatusBadge status={sr.status} />
+                <span className="font-mono text-xs text-text-secondary">
+                  {run.triggerType}
+                </span>
+              </div>
+              {isValidStatus(run.status) ? (
+                <StatusBadge status={run.status} />
               ) : (
-                <span className="font-mono text-xs text-red">{sr.status}</span>
+                <span className="font-mono text-xs text-red">{run.status}</span>
               )}
-            </div>
-          </Panel>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

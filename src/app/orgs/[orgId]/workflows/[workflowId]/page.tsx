@@ -5,6 +5,7 @@ import { getWorkflowDetail } from '@/lib/graphql/workflow-detail';
 import { getOrgIfMember } from '@/lib/graphql/orgs';
 import { WorkflowCanvas } from '@/components/canvas/WorkflowCanvas';
 import { TriggerRunButton } from '@/components/canvas/TriggerRunButton';
+import { AddStepButton } from '@/components/canvas/AddStepButton';
 
 export default async function WorkflowBuilderPage({
   params,
@@ -33,7 +34,10 @@ export default async function WorkflowBuilderPage({
         </h1>
         <div className="flex items-center gap-4">
           {canTrigger && (
-            <TriggerRunButton orgId={orgId} workflowId={workflowId} />
+            <>
+              <TriggerRunButton orgId={orgId} workflowId={workflowId} />
+              <AddStepButton workflowId={workflowId} />
+            </>
           )}
           <Link
             href={`/orgs/${orgId}/workflows/${workflowId}/runs`}

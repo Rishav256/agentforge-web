@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -83,8 +83,17 @@ export function WorkflowCanvas({ steps }: WorkflowCanvasProps) {
     return [...sequentialEdges, ...branchEdges];
   }, [steps]);
 
-  const [nodes, , onNodesChange] = useNodesState<StepNodeType>(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState<Edge>(initialEdges);
+  const [nodes, setNodes, onNodesChange] =
+    useNodesState<StepNodeType>(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
+
+  useEffect(() => {
+    setNodes(initialNodes);
+  }, [initialNodes, setNodes]);
+
+  useEffect(() => {
+    setEdges(initialEdges);
+  }, [initialEdges, setEdges]);
 
   const handleNodeDragStop = useCallback<OnNodeDrag<StepNodeType>>(
     (_event, node) => {
