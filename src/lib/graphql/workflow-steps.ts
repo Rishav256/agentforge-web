@@ -100,3 +100,87 @@ export async function createStep(
     return { success: false, error: 'Failed to create step' };
   }
 }
+
+const UPDATE_STEP = `
+  mutation UpdateStep($stepId: uuid!, $config: jsonb!) {
+    update_workflow_steps_by_pk(
+      pk_columns: { id: $stepId }
+      _set: { config: $config }
+    ) {
+      id
+    }
+  }
+`;
+
+interface UpdateStepResponse {
+  update_workflow_steps_by_pk: { id: string } | null;
+}
+
+export async function updateStep(
+  nhost: NhostClient,
+  stepId: string,
+  config: Record<string, unknown>,
+): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    const response = await nhost.graphql.request<UpdateStepResponse>({
+      query: UPDATE_STEP,
+      variables: { stepId, config },
+    });
+
+    if (response.body.errors) {
+      return {
+        success: false,
+        error: response.body.errors[0]?.message ?? 'Failed to update step',
+      };
+    }
+
+    if (!response.body.data?.update_workflow_steps_by_pk) {
+      return { success: false, error: 'No step returned after update' };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('[updateStep] Raw error:', err);
+    return { success: false, error: 'Failed to update step' };
+  }
+}
+
+const DELETE_STEP = `
+  mutation DeleteStep($stepId: uuid!) {
+    delete_workflow_steps_by_pk(id: $stepId) {
+      id
+    }
+  }
+`;
+
+interface DeleteStepResponse {
+  delete_workflow_steps_by_pk: { id: string } | null;
+}
+
+export async function deleteStep(
+  nhost: NhostClient,
+  stepId: string,
+): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    const response = await nhost.graphql.request<DeleteStepResponse>({
+      query: DELETE_STEP,
+      variables: { stepId },
+    });
+
+    if (response.body.errors) {
+      return {
+        success: false,
+        error: response.body.errors[0]?.message ?? 'Failed to delete step',
+      };
+    }
+
+    if (!response.body.data?.delete_workflow_steps_by_pk) {
+      return { success: false, error: 'Step not found or already deleted' };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('[deleteStep] Raw error:', err);
+    return { success: false, error: 'Failed to delete step' };
+  }
+}

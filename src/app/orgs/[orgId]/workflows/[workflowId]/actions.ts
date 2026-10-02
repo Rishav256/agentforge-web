@@ -3,7 +3,12 @@
 import type { NhostClient } from '@nhost/nhost-js';
 import { createNhostClient } from '@/lib/nhost/server';
 import { triggerWorkflowRun as triggerWorkflowRunQuery } from '@/lib/graphql/actions';
-import { createStep, type StepType } from '@/lib/graphql/workflow-steps';
+import {
+  createStep,
+  updateStep,
+  deleteStep,
+  type StepType,
+} from '@/lib/graphql/workflow-steps';
 
 const UPDATE_STEP_POSITION = `
   mutation UpdateStepPosition($stepId: uuid!, $position: jsonb!) {
@@ -53,4 +58,19 @@ export async function createStepAction(
 ): Promise<{ success: boolean; error?: string }> {
   const nhost = await createNhostClient();
   return createStep(nhost, workflowId, type, config);
+}
+
+export async function updateStepAction(
+  stepId: string,
+  config: Record<string, unknown>,
+): Promise<{ success: boolean; error?: string }> {
+  const nhost = await createNhostClient();
+  return updateStep(nhost, stepId, config);
+}
+
+export async function deleteStepAction(
+  stepId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const nhost = await createNhostClient();
+  return deleteStep(nhost, stepId);
 }

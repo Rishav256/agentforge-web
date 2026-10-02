@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -9,11 +9,14 @@ import {
   useEdgesState,
   type Edge,
   type OnNodeDrag,
+  type NodeMouseHandler,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { StepNode, type StepNodeType } from './StepNode';
 import type { WorkflowStep } from '@/lib/graphql/workflow-detail';
 import { updateStepPosition } from '@/app/orgs/[orgId]/workflows/[workflowId]/actions';
+import { EditStepPanel } from './EditStepPanel';
+import type { StepType } from '@/lib/graphql/workflow-steps';
 
 const nodeTypes = { step: StepNode };
 
@@ -106,8 +109,28 @@ export function WorkflowCanvas({ steps }: WorkflowCanvasProps) {
     [],
   );
 
+  const referencingStepOrders = useMemo(() => {
+    const map = new Map<number, number[]>();
+    for (const step of steps) {
+      if (step.type !== 'conditional_branch') continue;
+      const target = step.config.jumpToStepOnFalse;
+      if (typeof target !== 'number') continue;
+      const existing = map.get(target) ?? [];
+      map.set(target, [...existing, step.stepOrder]);
+    }
+    return map;
+  }, [steps]);
+
+  const [selectedStep, setSelectedStep] = useState<StepNodeType | null>(null);
+  const handleNodeClick = useCallback<NodeMouseHandler<StepNodeType>>(
+    (_event, node) => {
+      setSelectedStep(node);
+    },
+    [],
+  );
+
   return (
-    <div className="h-full w-full bg-bg">
+    <div className="relative h-full w-full bg-bg">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -115,12 +138,27 @@ export function WorkflowCanvas({ steps }: WorkflowCanvasProps) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeDragStop={handleNodeDragStop}
+        onNodeClick={handleNodeClick}
         fitView
         proOptions={{ hideAttribution: true }}
       >
         <Background color="var(--color-border)" gap={24} />
         <Controls />
       </ReactFlow>
+
+      {selectedStep && (
+        <EditStepPanel
+          key={selectedStep.id}
+          stepId={selectedStep.id}
+          stepOrder={selectedStep.data.stepOrder}
+          type={selectedStep.data.type as StepType}
+          config={selectedStep.data.config}
+          referencedByStepOrders={
+            referencingStepOrders.get(selectedStep.data.stepOrder) ?? []
+          }
+          onClose={() => setSelectedStep(null)}
+        />
+      )}
     </div>
   );
 }
