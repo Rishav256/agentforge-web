@@ -161,3 +161,26 @@ export async function getRunDetail(
     })),
   };
 }
+
+export const RUN_DETAIL_SUBSCRIPTION = `
+  subscription OnRunDetail($runId: uuid!) {
+    workflow_runs_by_pk(id: $runId) {
+      id
+      status
+      started_at
+      completed_at
+      trigger_type
+      step_runs(order_by: { workflow_step: { step_order: asc } }) {
+        id
+        status
+        started_at
+        completed_at
+        error
+        workflow_step {
+          type
+          step_order
+        }
+      }
+    }
+  }
+`;

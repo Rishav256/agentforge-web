@@ -1,10 +1,8 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Panel } from '@/components/ui/Panel';
-import { StatusBadge } from '@/components/ui/StatusBadge';
 import { createNhostClient } from '@/lib/nhost/server';
-import { getRunDetail, isValidStatus } from '@/lib/graphql/runs';
-import { ApproveStepButton } from '@/components/canvas/ApproveStepButton';
+import { getRunDetail } from '@/lib/graphql/runs';
+import { getGraphqlWsUrl } from '@/lib/nhost/ws-url';
+import { LiveRunDetail } from '@/components/canvas/LiveRunDetail';
 
 export default async function RunDetailPage({
   params,
@@ -19,56 +17,18 @@ export default async function RunDetailPage({
     notFound();
   }
 
-  return (
-    <div className="flex flex-1 flex-col p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="font-mono text-sm text-text-secondary">
-            RUN {run.id.slice(0, 8)}
-          </h1>
-          {isValidStatus(run.status) ? (
-            <StatusBadge status={run.status} />
-          ) : (
-            <span className="font-mono text-xs text-red">{run.status}</span>
-          )}
-        </div>
-        <Link
-          href={`/orgs/${orgId}/workflows/${workflowId}/runs`}
-          className="font-mono text-xs text-text-secondary hover:text-teal"
-        >
-          ← Back to runs
-        </Link>
-      </div>
+  const wsUrl = getGraphqlWsUrl(
+    process.env['NHOST_REGION'] || 'local',
+    process.env['NHOST_SUBDOMAIN'] || 'local',
+  );
 
-      <div className="flex flex-col gap-2">
-        {run.stepRuns.map((sr) => (
-          <Panel key={sr.id} className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-xs text-text-muted">
-                {String(sr.stepOrder).padStart(2, '0')}
-              </span>
-              <span className="font-mono text-xs text-text-primary">
-                {sr.stepType.toUpperCase()}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              {sr.error && (
-                <span className="max-w-xs truncate text-xs text-red">
-                  {sr.error}
-                </span>
-              )}
-              {sr.status === 'paused' && (
-                <ApproveStepButton stepRunId={sr.id} />
-              )}
-              {isValidStatus(sr.status) ? (
-                <StatusBadge status={sr.status} />
-              ) : (
-                <span className="font-mono text-xs text-red">{sr.status}</span>
-              )}
-            </div>
-          </Panel>
-        ))}
-      </div>
-    </div>
+  return (
+    <LiveRunDetail
+      initialRun={run}
+      runId={runId}
+      orgId={orgId}
+      workflowId={workflowId}
+      wsUrl={wsUrl}
+    />
   );
 }
